@@ -1,0 +1,48 @@
+{
+  "name": "react-immutable",
+  "version": "0.1.0",
+  "description": "Higher order component for managing immutable app state",
+  "main": "index.js",
+  "scripts": {
+    "test": "gulp test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/steveorsomethin/react-immutable.git"
+  },
+  "keywords": [
+    "react",
+    "immutable"
+  ],
+  "author": "Steve McGuire",
+  "licenses": [
+    {
+      "type": "Apache License, Version 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/steveorsomethin/react-immutable/issues"
+  },
+  "homepage": "https://github.com/steveorsomethin/react-immutable#readme",
+  "dependencies": {
+    "immutable": "^3.7.4"
+  },
+  "devDependencies": {
+    "babel": "^5.4.7",
+    "babel-runtime": "^5.5.6",
+    "chai": "^2.3.0",
+    "istanbul": "^0.3.15",
+    "jsdom": "3.x.x",
+    "mocha": "^2.2.5",
+    "mocha-babel": "^3.0.0",
+    "react": "^0.13.1",
+    "sinon": "^1.15.3"
+  },
+  "scripts": {
+    "test": "mocha --compilers js:mocha-babel -u bdd $(find ./test -type d -name unit)",
+    "coverage": "istanbul cover node_modules/.bin/_mocha -- --compilers js:mocha-babel -u bdd $(find ./test -type d -name unit)",
+    "compile": "mkdir -p ./dist && babel --optional runtime src --out-dir dist",
+    "prepublish": "npm run compile"
+  }
+}
