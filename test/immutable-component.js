@@ -8,43 +8,37 @@ const {
     addons: {
         TestUtils: {
             renderIntoDocument,
-            Simulate: {click}
+            Simulate: {mouseDown, mouseUp}
         }
     }
 } = React;
 const just = (v) => () => v;
 
 function mock(config) {
-    const MockNestedComponent = createClass({
-        displayName: 'MockComponent',
-        getDefaultProps: just({mockValue: 0}),
-        render: function() {
-            const {mockValue, onClick} = this.props;
-            return <div onClick={onClick}>{mockValue}</div>;
-        }
-    });
-
     const MockComponent = createClass({
         displayName: 'MockComponent',
         getDefaultProps: just({mockValue: 0}),
         render: function() {
-            const {mockValue, onClick} = this.props;
-            return <div onClick={onClick}>{mockValue}</div>;
+            const {mockValue, onMouseUp, onMouseDown} = this.props;
+            return <div onMouseDown={onMouseDown} onMouseUp={onMouseUp}>{mockValue}</div>;
         }
     });
 
     const StatefulComponent = ImmutableState(MockComponent, Object.assign({
         getPath: just('mockComponent'),
         getDefaultState: just({mockValue: 1}),
-        handleClick() {
+        handleMouseDown() {
             const {mockValue} = this.immutableState;
             this.setImmutableState({
                 mockValue: mockValue + 1
             });
         },
+        handleMouseUp() {
+            this.setImmutableState(({mockValue}) => ({mockValue: mockValue + 1}));
+        },
         getChildProps({mockValue}) {
-            const {handleClick: onClick} = this;
-            return {mockValue, onClick};
+            const {handleMouseUp: onMouseUp, handleMouseDown: onMouseDown} = this;
+            return {mockValue, onMouseUp, onMouseDown};
         }
     }, config));
 
@@ -86,12 +80,22 @@ describe('ImmutableState', function() {
     });
 
     describe('setImmutableState', () => {
-        it('should cause a re-render with updated state', () => {
+        it('should cause a re-render when provided with an object', () => {
             const {MockStatefulRoot} = mock();
             const instance = renderIntoDocument(<MockStatefulRoot />);
             const domNode = instance.getDOMNode();
 
-            click(domNode);
+            mouseDown(domNode);
+
+            expect(domNode.innerHTML).to.equal('2');
+        });
+
+        it('should cause a re-render when provided with a function', () => {
+            const {MockStatefulRoot} = mock();
+            const instance = renderIntoDocument(<MockStatefulRoot />);
+            const domNode = instance.getDOMNode();
+
+            mouseUp(domNode);
 
             expect(domNode.innerHTML).to.equal('2');
         });
@@ -121,7 +125,7 @@ describe('ImmutableStateRoot', () => {
             const instance = renderIntoDocument(<MockStatefulRoot onChange={onChange} />);
             const domNode = instance.getDOMNode();
 
-            click(domNode);
+            mouseDown(domNode);
 
             expect(onChange.args[0][0].toJS()).to.deep.equal({mockComponent: {mockValue: 2}});
         });
@@ -136,7 +140,7 @@ describe('ImmutableStateRoot', () => {
             const instance = renderIntoDocument(<MockStatefulRoot onChange={onChange} value={value} />);
             const domNode = instance.getDOMNode();
 
-            click(domNode);
+            mouseDown(domNode);
 
             expect(onChange.args[0][0].toJS()).to.deep.equal({mockComponent: {mockValue: 6}});
         });
@@ -149,7 +153,7 @@ describe('ImmutableStateRoot', () => {
             const instance = renderIntoDocument(<MockStatefulRoot onChange={onChange} value={value} />);
             const domNode = instance.getDOMNode();
 
-            click(domNode);
+            mouseDown(domNode);
 
             instance.setProps({value});
 

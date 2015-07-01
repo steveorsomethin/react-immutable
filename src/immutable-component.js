@@ -9,25 +9,29 @@ module.exports = ({React}) => {
     const just = (v) => () => v;
     const noop = () => {};
 
-    const ImmutableState = (Component, config) => {
+    function render(Component, getChildProps) {
+        return function() {
+            const {props, state: {immutableState: {value}, cachedState}} = this;
+            const childProps = getChildProps && getChildProps.call(this, cachedState, value) || undefined;
+
+            return childProps === undefined ? <Component {...props} /> : <Component {...props} {...childProps} />;
+        };
+    }
+
+    const ImmutableState = (Component, config = {}) => {
         const {
             getChildProps = identity
         } = config;
 
         const classConfig = {
             displayName: 'ImmutableState(' + Component.displayName + ')',
-            render() {
-                const {props, state: {cachedState, immutableState: {value}}} = this;
-                const childProps = getChildProps && getChildProps.call(this, cachedState) || undefined;
-
-                return childProps === undefined ? <Component {...props} /> : <Component {...props} {...childProps} />;
-            }
+            render: render(Component, getChildProps)
         };
 
         return createClass(Object.assign({}, ImmutableStateMixin(config), classConfig));
     };
 
-    const ImmutableStateRoot = (Component, config) => {
+    const ImmutableStateRoot = (Component, config = {}) => {
         const {
             getChildProps = identity,
             getDefaultState = just({})
@@ -35,7 +39,8 @@ module.exports = ({React}) => {
 
         const classConfig = {
             displayName: 'ImmutableStateRoot(' + Component.displayName + ')',
-            childContextTypes: contextTypes,
+            
+            contextTypes: null,
 
             propTypes: {
                 onChange: PropTypes.func
@@ -43,46 +48,34 @@ module.exports = ({React}) => {
 
             getDefaultProps: just({onChange: noop}),
 
-            getChildContext() {
-                const {immutableState} = this.state;
-
-                return {immutableStateComponentContext: immutableState};
-            },
-
             getInitialState() {
-                const value = this.props.value || fromJS(getDefaultState.call(this));
-                const path = [];
+                const {props, context} = this;
+                const value = props.value || fromJS(getDefaultState.call(this, props, context));
                 const {onChange} = this;
 
                 return {
                     cachedState: value.toObject(),
-                    immutableState: {root: value, value, path, onChange}
+                    immutableState: {root: value, value, path: [], onChange}
                 };
             },
 
-            componentWillMount() {
-                Object.defineProperty(this, 'immutableState', {
-                    get: function() {
-                        return this.state.cachedState;
-                    }
-                });
-            },
-
             componentWillReceiveProps(nextProps) {
-                const {immutableState: {value, path}} = this.state;
+                const {props, state, context} = this;
+                const {immutableState: {value}} = state;
                 const incomingValue = nextProps.value;
 
                 if (incomingValue !== undefined && !is(value, incomingValue)) {
                     const {onChange} = this;
                     this.setState({
                         cachedState: incomingValue.toObject(),
-                        immutableState: {root: incomingValue, value: incomingValue, path, onChange}
+                        immutableState: {root: incomingValue, value: incomingValue, path: [], onChange}
                     });
                 }
             },
 
             onChange(newImmutableState, changedPath, newState) {
-                const {immutableState: {value, path}} = this.state;
+                const {props, state, context} = this;
+                const {immutableState: {value}} = state;
                 const newValue = value.setIn(changedPath, newImmutableState);
 
                 if (!is(value, newValue)) {
@@ -91,21 +84,16 @@ module.exports = ({React}) => {
                     const {onChange} = this;
                     this.setState({
                         cachedState: newValue.toObject(),
-                        immutableState: {root: newValue, value: newValue, path, onChange}
+                        immutableState: {root: newValue, value: newValue, path: [], onChange}
                     });
                 }
             },
 
-            render() {
-                const {props, immutableState} = this;
-                const childProps = getChildProps && getChildProps.call(this, immutableState) || undefined;
-
-                return childProps === undefined ? <Component {...props} /> : <Component {...props} {...childProps} />;
-            }
+            render: render(Component, getChildProps)
         };
 
-        return createClass(Object.assign({}, config, classConfig));
+        return createClass(Object.assign({}, ImmutableStateMixin(config), classConfig));
     };
 
-    return {ImmutableState, ImmutableStateRoot};
+    return {ImmutableState, ImmutableStateRoot, ImmutableStateMixin};
 };

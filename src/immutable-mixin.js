@@ -1,7 +1,12 @@
 module.exports = ({React}) => {
+    function getImmutableState() {
+        return this.state.cachedState;
+    }
+
     return (config) => {
         const Immutable = require('immutable');
         const contextTypes = require('./context-types')({React});
+        const {immutableStateChanged} = require('./helpers');
 
         const {fromJS, is} = Immutable;
         const {createClass, PropTypes} = React;
@@ -14,12 +19,15 @@ module.exports = ({React}) => {
         const {
             getPath,
             getChildProps,
-            getDefaultState = just({})
+            getDefaultState = just({}),
+            shouldComponentUpdate
         } = config;
 
         const mixin = {
             contextTypes,
             childContextTypes: contextTypes,
+
+            shouldComponentUpdate,
 
             getChildContext() {
                 const {immutableState} = this.state;
@@ -33,24 +41,22 @@ module.exports = ({React}) => {
                 const {root, value: parentValue, path: parentPath, onChange} = immutableStateComponentContext;
                 const path = getPath.call(this, props, context);
                 const maybeValue = isArray(path) ? parentValue.getIn(path, NOT_SET) : parentValue.get(path, NOT_SET);
-                const value = maybeValue === NOT_SET ? fromJS(getDefaultState.call(this)) : maybeValue;
+                const value = maybeValue === NOT_SET ? fromJS(getDefaultState.call(this, props, context)) : maybeValue;
 
                 return {
                     cachedState: value.toObject(),
-                    immutableState: {root, value: fromJS(getDefaultState.call(this)), path: parentPath.concat(path), onChange}
+                    immutableState: {root, value, path: parentPath.concat(path), onChange}
                 };
             },
 
             componentWillMount() {
                 Object.defineProperty(this, 'immutableState', {
-                    get: function() {
-                        return this.state.cachedState;
-                    }
+                    get: getImmutableState
                 });
             },
 
             componentWillReceiveProps(nextProps, nextContext) {
-                const {state, context} = this;
+                const {props, state, context} = this;
                 const {immutableStateComponentContext} = context;
                 const {immutableStateComponentContext: nextImmutableStateComponentContext} = nextContext;
 
@@ -61,7 +67,7 @@ module.exports = ({React}) => {
                 const path = getPath.call(this, nextProps, nextContext);
 
                 const maybeValue = isArray(path) ? nextValue.getIn(path, NOT_SET) : nextValue.get(path, NOT_SET);
-                const value = maybeValue === NOT_SET ? fromJS(getDefaultState.call(this)) : maybeValue;
+                const value = maybeValue === NOT_SET ? fromJS(getDefaultState.call(this, props, context)) : maybeValue;
 
                 const {immutableState: {value: currentValue}} = state;
 
@@ -73,11 +79,16 @@ module.exports = ({React}) => {
                 });
             },
 
-            setImmutableState(newState, callback) {
-                const {immutableStateComponentContext: {onChange}} = this.context;
-                const {cachedState, immutableState} = this.state;
-                const {root, path, value: currentImmutableState} = immutableState;
-                const newImmutableState = currentImmutableState.merge(newState);
+            setImmutableState(stateOrFunction, callback) {
+                const isFunction = typeof stateOrFunction === 'function';
+                const newState = isFunction ? stateOrFunction.call(this, this.immutableState, this.props) : stateOrFunction;
+                const {immutableState} = this.state;
+                const {root, path, value: currentImmutableState, onChange} = immutableState;
+                const newImmutableState = currentImmutableState.withMutations((map) => {
+                    for (let key in newState) {
+                        map.set(key, newState[key]);
+                    }
+                });
 
                 onChange(newImmutableState, path, newState);
 
