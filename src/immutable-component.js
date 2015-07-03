@@ -1,9 +1,7 @@
 module.exports = ({React}) => {
-    const Immutable = require('immutable');
     const ImmutableStateMixin = require('./immutable-mixin')({React});
     const contextTypes = require('./context-types')({React});
-
-    const {fromJS, is} = Immutable;
+    const {merge, setIn, getIn} = require('./operators');
     const {createClass, PropTypes} = React;
     const identity = (v) => v;
     const just = (v) => () => v;
@@ -49,12 +47,12 @@ module.exports = ({React}) => {
 
             getInitialState() {
                 const {props, context} = this;
-                const value = props.value || fromJS(getDefaultState.call(this, props, context));
+                const value = props.value || getDefaultState.call(this, props, context);
                 const {onChange} = this;
                 this.pendingState = value;
 
                 return {
-                    cachedState: value.toObject(),
+                    cachedState: value,
                     immutableState: {root: value, value, path: [], onChange}
                 };
             },
@@ -63,12 +61,12 @@ module.exports = ({React}) => {
                 const {props, state, context, pendingState} = this;
                 const incomingValue = nextProps.value;
 
-                if (incomingValue !== undefined && !is(pendingState, incomingValue)) {
+                if (incomingValue !== undefined && pendingState !== incomingValue) {
                     this.pendingState = incomingValue;
                     const {onChange} = this;
 
                     this.setState({
-                        cachedState: incomingValue.toObject(),
+                        cachedState: incomingValue,
                         immutableState: {root: incomingValue, value: incomingValue, path: [], onChange}
                     });
                 }
@@ -80,16 +78,12 @@ module.exports = ({React}) => {
                 const {immutableState} = this.state;
                 const {root, path, onChange} = immutableState;
                 const currentImmutableState = this.pendingState;
-                const newImmutableState = currentImmutableState.withMutations((map) => {
-                    for (let key in newState) {
-                        map.set(key, newState[key]);
-                    }
-                });
+                const newImmutableState = merge(currentImmutableState, newState);
 
                 this.props.onChange(newImmutableState);
 
                 this.setState({
-                    cachedState: newImmutableState.toObject(),
+                    cachedState: newImmutableState,
                     immutableState: {root, path, value: newImmutableState, onChange}
                 }, callback);
             },
@@ -97,31 +91,27 @@ module.exports = ({React}) => {
             onChange(newImmutableState, changedPath, newState) {
                 const {props, state, context, pendingState} = this;
 
-                const maybeCurrentValueAtPath = pendingState.getIn(changedPath, NOT_SET);
+                const maybeCurrentValueAtPath = getIn(pendingState, changedPath, NOT_SET);
                 let newValueAtPath;
                 let newValue;
 
                 if (maybeCurrentValueAtPath === NOT_SET) {
                     newValueAtPath = newImmutableState;
-                    newValue = pendingState.setIn(changedPath, newImmutableState);
+                    newValue = setIn(pendingState, changedPath, newImmutableState);
                 } else {
                     const currentValueAtPath = maybeCurrentValueAtPath;
-                    newValueAtPath = currentValueAtPath.withMutations((map) => {
-                        newImmutableState.forEach((value, key) => {
-                            map.set(key, value);
-                        });
-                    });
-
-                    newValue = pendingState.setIn(changedPath, newValueAtPath);
+                    newValueAtPath = merge(currentValueAtPath, newImmutableState);
+                    newValue = setIn(pendingState, changedPath, newValueAtPath);
                 }
 
-                if (!is(pendingState, newValue)) {
+                if (pendingState !== newValue) {
                     this.props.onChange(newValue);
 
                     this.pendingState = newValue;
+
                     const {onChange} = this;
                     this.setState({
-                        cachedState: newValue.toObject(),
+                        cachedState: newValue,
                         immutableState: {root: newValue, value: newValue, path: [], onChange}
                     });
                 }
