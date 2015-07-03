@@ -90,11 +90,11 @@ module.exports = ({React}) => {
                     }
                 });
 
-                onChange(newImmutableState, path, newState);
+                const finalState = onChange(newImmutableState, path, newState);
 
                 this.setState({
-                    cachedState: newImmutableState.toObject(),
-                    immutableState: {root, path, value: newImmutableState, onChange}
+                    cachedState: finalState.toObject(),
+                    immutableState: {root, path, value: finalState, onChange}
                 }, callback);
             }
         };
