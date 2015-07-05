@@ -1,12 +1,12 @@
 module.exports = ({React}) => {
     function getImmutableState() {
-        return this.state.cachedState;
+        return this.state.immutableState.value;
     }
 
     return (config) => {
         const contextTypes = require('./context-types')({React});
         const {immutableStateChanged} = require('./helpers');
-        const {merge, get, getIn} = require('./operators');
+        const {merge, get, getIn, is} = require('./operators');
         const {createClass, PropTypes} = React;
 
         const isArray = Array.isArray;
@@ -42,7 +42,6 @@ module.exports = ({React}) => {
                 const value = maybeValue === NOT_SET ? getDefaultState.call(this, props, context) : maybeValue;
 
                 return {
-                    cachedState: value,
                     immutableState: {root, value, path: parentPath.concat(path), onChange}
                 };
             },
@@ -69,10 +68,9 @@ module.exports = ({React}) => {
 
                 const {immutableState: {value: currentValue}} = state;
 
-                if (value === currentValue) return;
+                if (is(value, currentValue)) return;
 
                 this.setState({
-                    cachedState: value,
                     immutableState: {root: nextRoot, value, path: nextPath.concat(path), onChange}
                 });
             },
@@ -87,7 +85,6 @@ module.exports = ({React}) => {
                 const finalState = onChange(newImmutableState, path, newState);
 
                 this.setState({
-                    cachedState: finalState,
                     immutableState: {root, path, value: finalState, onChange}
                 }, callback);
             }

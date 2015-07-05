@@ -1,7 +1,7 @@
 module.exports = ({React}) => {
     const ImmutableStateMixin = require('./immutable-mixin')({React});
     const contextTypes = require('./context-types')({React});
-    const {merge, setIn, getIn} = require('./operators');
+    const {merge, setIn, getIn, is} = require('./operators');
     const {createClass, PropTypes} = React;
     const identity = (v) => v;
     const just = (v) => () => v;
@@ -10,8 +10,8 @@ module.exports = ({React}) => {
 
     function render(Component, getChildProps) {
         return function() {
-            const {props, state: {immutableState: {value}, cachedState}} = this;
-            const childProps = getChildProps && getChildProps.call(this, cachedState, value) || undefined;
+            const {props, immutableState} = this;
+            const childProps = getChildProps && getChildProps.call(this, immutableState) || undefined;
 
             return childProps === undefined ? <Component {...props} /> : <Component {...props} {...childProps} />;
         };
@@ -52,7 +52,6 @@ module.exports = ({React}) => {
                 this.pendingState = value;
 
                 return {
-                    cachedState: value,
                     immutableState: {root: value, value, path: [], onChange}
                 };
             },
@@ -61,12 +60,11 @@ module.exports = ({React}) => {
                 const {props, state, context, pendingState} = this;
                 const incomingValue = nextProps.value;
 
-                if (incomingValue !== undefined && pendingState !== incomingValue) {
+                if (incomingValue !== undefined && !is(pendingState, incomingValue)) {
                     this.pendingState = incomingValue;
                     const {onChange} = this;
 
                     this.setState({
-                        cachedState: incomingValue,
                         immutableState: {root: incomingValue, value: incomingValue, path: [], onChange}
                     });
                 }
@@ -83,7 +81,6 @@ module.exports = ({React}) => {
                 this.props.onChange(newImmutableState);
 
                 this.setState({
-                    cachedState: newImmutableState,
                     immutableState: {root, path, value: newImmutableState, onChange}
                 }, callback);
             },
@@ -104,14 +101,13 @@ module.exports = ({React}) => {
                     newValue = setIn(pendingState, changedPath, newValueAtPath);
                 }
 
-                if (pendingState !== newValue) {
+                if (!is(pendingState, newValue)) {
                     this.props.onChange(newValue);
 
                     this.pendingState = newValue;
 
                     const {onChange} = this;
                     this.setState({
-                        cachedState: newValue,
                         immutableState: {root: newValue, value: newValue, path: [], onChange}
                     });
                 }

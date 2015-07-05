@@ -1,5 +1,30 @@
 const {isArray} = Array;
-const {freeze} = Object;
+const {freeze, keys} = Object;
+
+function is(a, b) {
+    if (a === b) return true;
+
+    const aType = typeof a;
+    const bType = typeof b;
+
+    if (aType !== bType || aType !== 'object') return false;
+    
+    const checkedKeys = {};
+
+    for (let key in a) {
+        if (!is(a[key], b[key])) {
+            return false;
+        }
+
+        checkedKeys[key] = true;
+    }
+
+    for (let key in b) {
+        if (!checkedKeys[key]) return false;
+    }
+
+    return true;
+}
 
 function set(obj, name, value) {
     if (obj[name] === value) return obj;
@@ -61,13 +86,14 @@ function setIn(obj, path, value) {
             targetNode[key] = sourceNode[key];
         }
 
-        freeze(targetNode);
+        // if (i !== pathLen - 2) freeze(targetNode);
     }
-        
+
     const lastPathPart = path[pathLen - 1];
     targetNode[lastPathPart] = value;
 
-    freeze(result);
+    // freeze(targetNode);
+    // freeze(result);
 
     return result;
 }
@@ -89,4 +115,6 @@ function get(obj, name, notSet) {
     return obj[name] || notSet;
 }
 
-module.exports = {set, merge, get, setIn, getIn};
+nrdp.stuff = {set, merge, get, setIn, getIn, is};
+
+module.exports = {set, merge, get, setIn, getIn, is};
