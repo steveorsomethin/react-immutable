@@ -76,13 +76,25 @@ module.exports = ({React}) => {
                 const {immutableState} = this.state;
                 const {root, path, onChange} = immutableState;
                 const currentImmutableState = this.pendingState;
-                const newImmutableState = merge(currentImmutableState, newState);
+                let somethingChanged = false;
 
-                this.props.onChange(newImmutableState);
+                for (let key in newState) {
+                    const newValue = newState[key];
+                    const oldValue = currentImmutableState[key];
+                    if (!is(newValue, oldValue)) {
+                        somethingChanged = true;
+                        break;
+                    }
+                }
 
-                this.setState({
-                    immutableState: {root, path, value: newImmutableState, onChange}
-                }, callback);
+                if (somethingChanged) {
+                    const newImmutableState = merge(currentImmutableState, newState);
+                    this.props.onChange(newImmutableState);
+
+                    this.setState({
+                        immutableState: {root, path, value: newImmutableState, onChange}
+                    }, callback);
+                }
             },
 
             onChange(newImmutableState, changedPath, newState) {

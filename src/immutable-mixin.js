@@ -13,6 +13,7 @@ module.exports = ({React}) => {
         const NOT_SET = {};
 
         const just = (v) => () => v;
+        const iss = (a, b) => a === b;
 
         const {
             getPath,
@@ -68,11 +69,11 @@ module.exports = ({React}) => {
 
                 const {immutableState: {value: currentValue}} = state;
 
-                if (is(value, currentValue)) return;
-
-                this.setState({
-                    immutableState: {root: nextRoot, value, path: nextPath.concat(path), onChange}
-                });
+                if (value !== currentValue) {
+                    this.setState({
+                        immutableState: {root: nextRoot, value, path: nextPath.concat(path), onChange}
+                    });
+                }
             },
 
             setImmutableState(stateOrFunction, callback) {
@@ -80,13 +81,25 @@ module.exports = ({React}) => {
                 const newState = isFunction ? stateOrFunction.call(this, this.immutableState, this.props) : stateOrFunction;
                 const {immutableState} = this.state;
                 const {root, path, value: currentImmutableState, onChange} = immutableState;
-                const newImmutableState = merge(currentImmutableState, newState);
+                let somethingChanged = false;
 
-                const finalState = onChange(newImmutableState, path, newState);
+                for (let key in newState) {
+                    const newValue = newState[key];
+                    const oldValue = currentImmutableState[key];
+                    if (!is(newValue, oldValue)) {
+                        somethingChanged = true;
+                        break;
+                    }
+                }
 
-                this.setState({
-                    immutableState: {root, path, value: finalState, onChange}
-                }, callback);
+                if (somethingChanged) {
+                    const newImmutableState = merge(currentImmutableState, newState);
+                    const finalState = onChange(newImmutableState, path, newState);
+
+                    this.setState({
+                        immutableState: {root, path, value: finalState, onChange}
+                    }, callback);
+                }
             }
         };
 
