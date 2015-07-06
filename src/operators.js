@@ -115,6 +115,4 @@ function get(obj, name, notSet) {
     return obj[name] || notSet;
 }
 
-nrdp.stuff = {set, merge, get, setIn, getIn, is};
-
 module.exports = {set, merge, get, setIn, getIn, is};
