@@ -13,10 +13,9 @@ module.exports = ({React}) => {
         const NOT_SET = {};
 
         const just = (v) => () => v;
-        const iss = (a, b) => a === b;
 
         const {
-            getPath,
+            getPath = just([]),
             getChildProps,
             getDefaultState = just({}),
             shouldComponentUpdate
