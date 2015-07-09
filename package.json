@@ -7,7 +7,8 @@
     "test": "mocha --compilers js:mocha-babel -u bdd $(find ./test -type d -name unit)",
     "coverage": "istanbul cover node_modules/.bin/_mocha -- --compilers js:mocha-babel -u bdd $(find ./test -type d -name unit)",
     "compile": "mkdir -p ./dist && babel --optional runtime src --out-dir dist",
-    "prepublish": "npm run compile"
+    "prepublish": "npm run compile",
+    "postinstall": "npm run compile"
   },
   "repository": {
     "type": "git",
