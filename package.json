@@ -1,12 +1,12 @@
 {
   "name": "react-immutable",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Higher order component for managing hierarchical, immutable app state",
   "main": "index.js",
   "scripts": {
     "test": "mocha --compilers js:mocha-babel -u bdd $(find ./test -type d -name unit)",
     "coverage": "istanbul cover node_modules/.bin/_mocha -- --compilers js:mocha-babel -u bdd $(find ./test -type d -name unit)",
-    "compile": "mkdir -p ./dist && babel --optional runtime src --out-dir dist",
+    "compile": "mkdir -p ./dist && babel src --out-dir dist",
     "prepublish": "npm run compile"
   },
   "repository": {
