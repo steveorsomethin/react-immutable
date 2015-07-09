@@ -17,7 +17,9 @@
     "react",
     "immutable"
   ],
-  "author": "Steve McGuire",
+  "author": {
+    "name": "Netflix"
+  },
   "licenses": [
     {
       "type": "Apache License, Version 2.0",
@@ -26,6 +28,9 @@
   ],
   "bugs": {
     "url": "https://github.com/steveorsomethin/react-immutable/issues"
+  },
+  "publishConfig": {
+    "registry" : "http://artifacts.netflix.com/api/npm/npm-local"
   },
   "homepage": "https://github.com/steveorsomethin/react-immutable#readme",
   "devDependencies": {
