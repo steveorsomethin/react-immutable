@@ -1,14 +1,12 @@
 module.exports = ({React}) => {
     function getImmutableState() {
-        return this.state.cachedState;
+        return this.state.immutableState.value;
     }
 
     return (config) => {
-        const Immutable = require('immutable');
         const contextTypes = require('./context-types')({React});
         const {immutableStateChanged} = require('./helpers');
-
-        const {fromJS, is} = Immutable;
+        const {merge, get, getIn, is} = require('./operators');
         const {createClass, PropTypes} = React;
 
         const isArray = Array.isArray;
@@ -17,7 +15,7 @@ module.exports = ({React}) => {
         const just = (v) => () => v;
 
         const {
-            getPath,
+            getPath = just([]),
             getChildProps,
             getDefaultState = just({}),
             shouldComponentUpdate
@@ -40,11 +38,10 @@ module.exports = ({React}) => {
                 const {immutableStateComponentContext} = context;
                 const {root, value: parentValue, path: parentPath, onChange} = immutableStateComponentContext;
                 const path = getPath.call(this, props, context);
-                const maybeValue = isArray(path) ? parentValue.getIn(path, NOT_SET) : parentValue.get(path, NOT_SET);
-                const value = maybeValue === NOT_SET ? fromJS(getDefaultState.call(this, props, context)) : maybeValue;
+                const maybeValue = isArray(path) ? getIn(parentValue, path, NOT_SET) : get(parentValue, path, NOT_SET);
+                const value = maybeValue === NOT_SET ? getDefaultState.call(this, props, context) : maybeValue;
 
                 return {
-                    cachedState: value.toObject(),
                     immutableState: {root, value, path: parentPath.concat(path), onChange}
                 };
             },
@@ -66,17 +63,16 @@ module.exports = ({React}) => {
 
                 const path = getPath.call(this, nextProps, nextContext);
 
-                const maybeValue = isArray(path) ? nextValue.getIn(path, NOT_SET) : nextValue.get(path, NOT_SET);
-                const value = maybeValue === NOT_SET ? fromJS(getDefaultState.call(this, props, context)) : maybeValue;
+                const maybeValue = isArray(path) ? getIn(nextValue, path, NOT_SET) : get(nextValue, path, NOT_SET);
+                const value = maybeValue === NOT_SET ? getDefaultState.call(this, props, context) : maybeValue;
 
                 const {immutableState: {value: currentValue}} = state;
 
-                if (is(value, currentValue)) return;
-
-                this.setState({
-                    cachedState: value.toObject(),
-                    immutableState: {root: nextRoot, value, path: nextPath.concat(path), onChange}
-                });
+                if (value !== currentValue) {
+                    this.setState({
+                        immutableState: {root: nextRoot, value, path: nextPath.concat(path), onChange}
+                    });
+                }
             },
 
             setImmutableState(stateOrFunction, callback) {
@@ -84,18 +80,25 @@ module.exports = ({React}) => {
                 const newState = isFunction ? stateOrFunction.call(this, this.immutableState, this.props) : stateOrFunction;
                 const {immutableState} = this.state;
                 const {root, path, value: currentImmutableState, onChange} = immutableState;
-                const newImmutableState = currentImmutableState.withMutations((map) => {
-                    for (let key in newState) {
-                        map.set(key, newState[key]);
+                let somethingChanged = false;
+
+                for (let key in newState) {
+                    const newValue = newState[key];
+                    const oldValue = currentImmutableState[key];
+                    if (!is(newValue, oldValue)) {
+                        somethingChanged = true;
+                        break;
                     }
-                });
+                }
 
-                const finalState = onChange(newImmutableState, path, newState);
+                if (somethingChanged) {
+                    const newImmutableState = merge(currentImmutableState, newState);
+                    const finalState = onChange(newImmutableState, path, newState);
 
-                this.setState({
-                    cachedState: finalState.toObject(),
-                    immutableState: {root, path, value: finalState, onChange}
-                }, callback);
+                    this.setState({
+                        immutableState: {root, path, value: finalState, onChange}
+                    }, callback);
+                }
             }
         };
 
