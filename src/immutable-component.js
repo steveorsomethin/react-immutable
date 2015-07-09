@@ -27,7 +27,7 @@ module.exports = ({React}) => {
             render: render(Component, getChildProps)
         };
 
-        return createClass(Object.assign({}, ImmutableStateMixin(config), classConfig));
+        return createClass(merge(ImmutableStateMixin(config), classConfig));
     };
 
     const ImmutableStateRoot = (Component, config = {}) => {
@@ -130,7 +130,7 @@ module.exports = ({React}) => {
             render: render(Component, getChildProps)
         };
 
-        return createClass(Object.assign({}, ImmutableStateMixin(config), classConfig));
+        return createClass(merge(ImmutableStateMixin(config), classConfig));
     };
 
     return {ImmutableState, ImmutableStateRoot, ImmutableStateMixin};

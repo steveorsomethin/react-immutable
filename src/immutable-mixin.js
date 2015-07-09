@@ -102,6 +102,6 @@ module.exports = ({React}) => {
             }
         };
 
-        return Object.assign({}, config, mixin);
+        return merge(config, mixin);
     };
 };
