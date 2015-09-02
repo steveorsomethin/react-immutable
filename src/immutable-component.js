@@ -89,6 +89,7 @@ module.exports = ({React}) => {
 
                 if (somethingChanged) {
                     const newImmutableState = merge(currentImmutableState, newState);
+                    this.pendingState = newImmutableState;
                     this.props.onChange(newImmutableState);
 
                     this.setState({
