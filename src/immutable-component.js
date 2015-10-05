@@ -114,12 +114,12 @@ module.exports = ({React}) => {
                     newValue = setIn(pendingState, changedPath, newValueAtPath);
                 }
 
-                this.pendingState = newValue;
+                if (pendingState !== newValue) {
+                    const {onChange} = this;
 
-                if (!is(pendingState, newValue)) {
+                    this.pendingState = newValue;
                     this.props.onChange(newValue);
 
-                    const {onChange} = this;
                     this.setState({
                         immutableState: {root: newValue, value: newValue, path: [], onChange}
                     });
