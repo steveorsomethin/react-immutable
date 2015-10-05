@@ -98,7 +98,7 @@ module.exports = ({React}) => {
                 }
             },
 
-            onChange(newImmutableState, changedPath, newState) {
+            onChange(newPartialState, changedPath, newState) {
                 const {props, state, context, pendingState} = this;
 
                 const maybeCurrentValueAtPath = getIn(pendingState, changedPath, NOT_SET);
@@ -106,18 +106,18 @@ module.exports = ({React}) => {
                 let newValue;
 
                 if (maybeCurrentValueAtPath === NOT_SET) {
-                    newValueAtPath = newImmutableState;
-                    newValue = setIn(pendingState, changedPath, newImmutableState);
+                    newValueAtPath = newPartialState;
+                    newValue = setIn(pendingState, changedPath, newValueAtPath);
                 } else {
                     const currentValueAtPath = maybeCurrentValueAtPath;
-                    newValueAtPath = merge(currentValueAtPath, newImmutableState);
+                    newValueAtPath = merge(currentValueAtPath, newPartialState);
                     newValue = setIn(pendingState, changedPath, newValueAtPath);
                 }
 
+                this.pendingState = newValue;
+
                 if (!is(pendingState, newValue)) {
                     this.props.onChange(newValue);
-
-                    this.pendingState = newValue;
 
                     const {onChange} = this;
                     this.setState({
