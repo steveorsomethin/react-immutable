@@ -41,8 +41,11 @@ module.exports = ({React}) => {
                 const maybeValue = isArray(path) ? getIn(parentValue, path, NOT_SET) : get(parentValue, path, NOT_SET);
                 const value = maybeValue === NOT_SET ? getDefaultState.call(this, props, context) : maybeValue;
 
+                const fullPath = parentPath.concat(path);
+                const finalValue = onChange(value, fullPath);
+
                 return {
-                    immutableState: {root, value, path: parentPath.concat(path), onChange}
+                    immutableState: {root, value: finalValue, path: parentPath.concat(path), onChange}
                 };
             },
 
