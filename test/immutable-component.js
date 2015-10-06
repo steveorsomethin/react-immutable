@@ -126,7 +126,11 @@ describe('ImmutableStateRoot', () => {
 
             mouseDown(domNode);
 
-            expect(onChange.args[0][0]).to.deep.equal({mockComponent: {mockValue: 2}});
+            expect(onChange.args[0][0]).to.deep.equal({
+                value: {
+                    mockComponent: {mockValue: 2}
+                }
+            });
         });
     });
 
@@ -141,7 +145,11 @@ describe('ImmutableStateRoot', () => {
 
             mouseDown(domNode);
 
-            expect(onChange.args[0][0]).to.deep.equal({mockComponent: {mockValue: 6}});
+            expect(onChange.args[0][0]).to.deep.equal({
+                value: {
+                    mockComponent: {mockValue: 6}
+                }
+            });
         });
 
         it('should use incoming props value on update', () => {
@@ -156,7 +164,11 @@ describe('ImmutableStateRoot', () => {
 
             instance.setProps({value});
 
-            expect(onChange.args[0][0]).to.deep.equal({mockComponent: {mockValue: 6}});
+            expect(onChange.args[0][0]).to.deep.equal({
+                value: {
+                    mockComponent: {mockValue: 5}
+                }
+            });
         });
     });
 });
