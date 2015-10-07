@@ -41,8 +41,11 @@ module.exports = ({React}) => {
                 const maybeValue = isArray(path) ? getIn(parentValue, path, NOT_SET) : get(parentValue, path, NOT_SET);
                 const value = maybeValue === NOT_SET ? getDefaultState.call(this, props, context) : maybeValue;
 
+                const fullPath = parentPath.concat(path);
+                const finalValue = onChange(value, fullPath);
+
                 return {
-                    immutableState: {root, value, path: parentPath.concat(path), onChange}
+                    immutableState: {root, value: finalValue, path: parentPath.concat(path), onChange}
                 };
             },
 
@@ -69,8 +72,11 @@ module.exports = ({React}) => {
                 const {immutableState: {value: currentValue}} = state;
 
                 if (value !== currentValue) {
+                    const fullPath = nextPath.concat(path);
+                    const finalValue = onChange(value, fullPath);
+
                     this.setState({
-                        immutableState: {root: nextRoot, value, path: nextPath.concat(path), onChange}
+                        immutableState: {root: nextRoot, value: finalValue, path: fullPath, onChange}
                     });
                 }
             },
@@ -80,7 +86,7 @@ module.exports = ({React}) => {
                 const newState = isFunction ? stateOrFunction.call(this, this.immutableState, this.props) : stateOrFunction;
                 const {immutableState} = this.state;
                 const {root, path, value: currentImmutableState, onChange} = immutableState;
-                const newImmutableState = onChange(newState, path, newState);
+                const newImmutableState = onChange(newState, path, true);
 
                 if (currentImmutableState !== newImmutableState) {
                     this.setState({

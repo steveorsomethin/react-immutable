@@ -49,7 +49,7 @@ module.exports = ({React}) => {
                 const {props, context} = this;
                 const value = props.value || getDefaultState.call(this, props, context);
                 const {onChange} = this;
-                this.pendingState = value;
+                this.mutableCell = {value};
 
                 return {
                     immutableState: {root: value, value, path: [], onChange}
@@ -57,11 +57,12 @@ module.exports = ({React}) => {
             },
 
             componentWillReceiveProps(nextProps) {
-                const {props, state, context, pendingState} = this;
+                const {props, state, context, mutableCell} = this;
+                const pendingState = mutableCell.value;
                 const incomingValue = nextProps.value;
 
                 if (incomingValue !== undefined && !is(pendingState, incomingValue)) {
-                    this.pendingState = incomingValue;
+                    this.mutableCell.value = incomingValue;
                     const {onChange} = this;
 
                     this.setState({
@@ -75,7 +76,7 @@ module.exports = ({React}) => {
                 const newState = isFunction ? stateOrFunction.call(this, this.immutableState, this.props) : stateOrFunction;
                 const {immutableState} = this.state;
                 const {root, path, onChange} = immutableState;
-                const currentImmutableState = this.pendingState;
+                const currentImmutableState = this.mutableCell.value;
                 let somethingChanged = false;
 
                 for (let key in newState) {
@@ -89,7 +90,7 @@ module.exports = ({React}) => {
 
                 if (somethingChanged) {
                     const newImmutableState = merge(currentImmutableState, newState);
-                    this.pendingState = newImmutableState;
+                    this.mutableCell.value = newImmutableState;
                     this.props.onChange(newImmutableState);
 
                     this.setState({
@@ -98,8 +99,9 @@ module.exports = ({React}) => {
                 }
             },
 
-            onChange(newPartialState, changedPath, newState) {
-                const {props, state, context, pendingState} = this;
+            onChange(newPartialState, changedPath, shouldSetState = false) {
+                const {props, state, context, mutableCell} = this;
+                const pendingState = mutableCell.value;
 
                 const maybeCurrentValueAtPath = getIn(pendingState, changedPath, NOT_SET);
                 let newValueAtPath;
@@ -117,12 +119,14 @@ module.exports = ({React}) => {
                 if (pendingState !== newValue) {
                     const {onChange} = this;
 
-                    this.pendingState = newValue;
-                    this.props.onChange(newValue);
+                    mutableCell.value = newValue;
 
-                    this.setState({
-                        immutableState: {root: newValue, value: newValue, path: [], onChange}
-                    });
+                    if (shouldSetState) {
+                        this.props.onChange(mutableCell);
+                        this.setState({
+                            immutableState: {root: newValue, value: newValue, path: [], onChange}
+                        });
+                    }
                 }
 
                 return newValueAtPath;
