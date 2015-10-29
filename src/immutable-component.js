@@ -91,7 +91,7 @@ module.exports = ({React}) => {
                 if (somethingChanged) {
                     const newImmutableState = merge(currentImmutableState, newState);
                     this.mutableCell.value = newImmutableState;
-                    this.props.onChange(newImmutableState);
+                    this.props.onChange(this.mutableCell);
 
                     this.setState({
                         immutableState: {root, path, value: newImmutableState, onChange}
