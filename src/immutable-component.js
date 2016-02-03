@@ -1,5 +1,5 @@
 module.exports = ({React}) => {
-    const ImmutableStateMixin = require('./immutable-mixin')({React});
+    const {ImmutableStateMixin, ImmutableStateTransducer} = require('./immutable-mixin')({React});
     const contextTypes = require('./context-types')({React});
     const {merge, setIn, getIn, is} = require('./operators');
     const {createClass, PropTypes} = React;
@@ -138,5 +138,5 @@ module.exports = ({React}) => {
         return createClass(merge(ImmutableStateMixin(config), classConfig));
     };
 
-    return {ImmutableState, ImmutableStateRoot, ImmutableStateMixin};
+    return {ImmutableState, ImmutableStateRoot, ImmutableStateMixin, ImmutableStateTransducer};
 };

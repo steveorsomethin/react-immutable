@@ -7,6 +7,7 @@ module.exports = {
     ImmutableStateMixin: immutableComponent.ImmutableStateMixin,
     ImmutableState: immutableComponent.ImmutableState,
     ImmutableStateRoot: immutableComponent.ImmutableStateRoot,
+    ImmutableStateTransducer: immutableComponent.ImmutableStateTransducer,
     helpers: helpers,
     operators: operators
 };

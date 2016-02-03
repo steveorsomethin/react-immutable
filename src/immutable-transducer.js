@@ -1,5 +1,4 @@
-module.exports = ({React}) => {
-    const contextTypes = require('./context-types')({React});
+const contextTypes = require('./context-types')({React});
     const {immutableStateChanged} = require('./helpers');
     const {merge, get, getIn, is} = require('./operators');
     const {createClass, PropTypes} = React;
@@ -68,75 +67,3 @@ module.exports = ({React}) => {
             }
         };
     }
-
-    const ImmutableStateMixin = (config) => {
-        const {
-            getNextState,
-            actions: {
-                setImmutableState
-            }
-        } = ImmutableStateTransducer(config);
-
-        const {
-            getPath,
-            getDefaultState,
-            getChildProps,
-            shouldComponentUpdate
-        } = config;
-
-        const mixin = {
-            contextTypes,
-            childContextTypes: contextTypes,
-
-            shouldComponentUpdate,
-
-            getChildContext() {
-                const {immutableState} = this.state;
-
-                return {immutableStateComponentContext: immutableState};
-            },
-
-            getInitialState() {
-                const seedState = {immutableState: {}};
-                const {props, context} = this;
-
-                let initialState;
-
-                getNextState(props, seedState, context, (nextState) => {
-                    initialState = nextState
-                });
-
-                return initialState;
-            },
-
-            componentWillMount() {
-                Object.defineProperty(this, 'immutableState', {
-                    get: getImmutableState
-                });
-            },
-
-            componentWillReceiveProps(props, context) {
-                const {state} = this;
-                
-                getNextState(props, state, context, (nextState) => {
-                    if (state !== nextState) {
-                        this.setState(nextState);
-                    }
-                });
-            },
-
-            setImmutableState(newStateOrFunction, callback) {
-                const {props, state, context} = this;
-                const nextState = setImmutableState(props, state, context, newStateOrFunction, callback);
-
-                if (state !== nextState) {
-                    this.setState(nextState, callback);
-                }
-            }
-        };
-
-        return merge(config, mixin);
-    };
-
-    return {ImmutableStateTransducer, ImmutableStateMixin};
-};
