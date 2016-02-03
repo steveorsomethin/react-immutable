@@ -4,6 +4,7 @@
   "description": "Higher order component for managing hierarchical, immutable app state",
   "main": "index.js",
   "scripts": {
+    "lint": "eslint ./src",
     "test": "mocha --compilers js:mocha-babel -u bdd $(find ./test -type d -name unit)",
     "coverage": "istanbul cover node_modules/.bin/_mocha -- --compilers js:mocha-babel -u bdd $(find ./test -type d -name unit)",
     "compile": "mkdir -p ./dist && babel src --out-dir dist",
@@ -36,6 +37,8 @@
   "devDependencies": {
     "babel": "^5.4.7",
     "babel-runtime": "^5.5.6",
+    "eslint": "^1.10.3",
+    "eslint-plugin-react": "^3.11.3",
     "chai": "^2.3.0",
     "istanbul": "^0.3.15",
     "jsdom": "3.x.x",
