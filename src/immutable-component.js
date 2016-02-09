@@ -1,6 +1,5 @@
 module.exports = ({React}) => {
     const {ImmutableStateMixin, ImmutableStateTransducer} = require('./immutable-mixin')({React});
-    const contextTypes = require('./context-types')({React});
     const {merge, setIn, getIn, is} = require('./operators');
     const {createClass, PropTypes} = React;
     const identity = (v) => v;
@@ -38,7 +37,7 @@ module.exports = ({React}) => {
 
         const classConfig = {
             displayName: 'ImmutableStateRoot(' + Component.displayName + ')',
-            
+
             contextTypes: null,
 
             propTypes: {onChange: PropTypes.func},
@@ -57,7 +56,7 @@ module.exports = ({React}) => {
             },
 
             componentWillReceiveProps(nextProps) {
-                const {props, state, context, mutableCell} = this;
+                const {mutableCell} = this;
                 const pendingState = mutableCell.value;
                 const incomingValue = nextProps.value;
 
@@ -79,7 +78,7 @@ module.exports = ({React}) => {
                 const currentImmutableState = this.mutableCell.value;
                 let somethingChanged = false;
 
-                for (let key in newState) {
+                for (const key in newState) {
                     const newValue = newState[key];
                     const oldValue = currentImmutableState[key];
                     if (!is(newValue, oldValue)) {
@@ -100,7 +99,7 @@ module.exports = ({React}) => {
             },
 
             onChange(newPartialState, changedPath, shouldSetState = false) {
-                const {props, state, context, mutableCell} = this;
+                const {mutableCell} = this;
                 const pendingState = mutableCell.value;
 
                 const maybeCurrentValueAtPath = getIn(pendingState, changedPath, NOT_SET);

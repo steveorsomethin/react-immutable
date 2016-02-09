@@ -1,20 +1,16 @@
-const contextTypes = require('./context-types')({React});
-    const {immutableStateChanged} = require('./helpers');
-    const {merge, get, getIn, is} = require('./operators');
-    const {createClass, PropTypes} = React;
+module.exports = ({React}) => {
+    const contextTypes = require('./context-types')({React});
+    const {get, getIn} = require('./operators');
     const NOT_SET = {};
     const just = (v) => () => v;
     const isArray = Array.isArray;
-
-    function getImmutableState() {
-        return this.state.immutableState.value;
-    }
 
     function ImmutableStateTransducer(config) {
         const {
             getPath = just([]),
             getDefaultState = just({}),
-            selector
+            selector,
+            name = 'immutableState'
         } = config;
 
         function getNextState(props, state = {immutableState: {}}, context, callback) {
@@ -39,6 +35,7 @@ const contextTypes = require('./context-types')({React});
         }
 
         return {
+            name,
             contextTypes,
             childContextTypes: contextTypes,
             getChildContext({immutableState}) {
@@ -49,7 +46,7 @@ const contextTypes = require('./context-types')({React});
                 return selector(state.immutableState.value, props);
             },
             actions: {
-                setImmutableState(props, state, context, newStateOrFunction, callback) {
+                setImmutableState(props, state, context, newStateOrFunction) {
                     const isFunction = typeof newStateOrFunction === 'function';
                     const {immutableState} = state;
                     const {root, path, value: currentImmutableState, onChange} = immutableState;
@@ -67,3 +64,6 @@ const contextTypes = require('./context-types')({React});
             }
         };
     }
+
+    return ImmutableStateTransducer;
+};

@@ -1,5 +1,5 @@
 const {isArray} = Array;
-const {freeze, keys} = Object;
+const {freeze} = Object;
 
 function set(obj, name, value) {
     if (obj[name] === value) {
@@ -8,7 +8,7 @@ function set(obj, name, value) {
 
     const result = {};
 
-    for (let key in obj) {
+    for (const key in obj) {
         result[key] = obj[key];
     }
 
@@ -26,8 +26,8 @@ function setIn(obj, path, value) {
     const pathLen = path.length;
     let sourceNode = obj;
     let targetNode = result;
-    
-    for (let key in sourceNode) {
+
+    for (const key in sourceNode) {
         targetNode[key] = sourceNode[key];
     }
 
@@ -40,7 +40,7 @@ function setIn(obj, path, value) {
 
         freeze(prevTargetNode);
 
-        for (let key in sourceNode) {
+        for (const key in sourceNode) {
             targetNode[key] = sourceNode[key];
         }
     }
@@ -61,17 +61,17 @@ function merge(obj, value) {
     const result = {};
     let somethingChanged = false;
 
-    for (let key in obj) {
+    for (const key in obj) {
         result[key] = obj[key];
     }
 
-    for (let key in value) {
+    for (const key in value) {
         const output = value[key];
         if (!somethingChanged && output !== obj[key]) {
             somethingChanged = true;
         }
 
-        result[key] = output; 
+        result[key] = output;
     }
 
     return somethingChanged ? freeze(result) : obj;
@@ -97,23 +97,29 @@ function getIn(obj, path, notSet) {
     for (let i = 0; i < pathLen; i++) {
         const pathPart = path[i];
         node = node[pathPart];
-        if (!node) break;
+        if (!node) {
+            break;
+        }
     }
-    
+
     return node === undefined ? notSet : node;
 }
 
 function is(a, b) {
-    if (a === b) return true;
+    if (a === b) {
+        return true;
+    }
 
     const aType = typeof a;
     const bType = typeof b;
 
-    if (aType !== bType || aType !== 'object') return false;
-    
+    if (aType !== bType || aType !== 'object') {
+        return false;
+    }
+
     const checkedKeys = {};
 
-    for (let key in a) {
+    for (const key in a) {
         if (!is(a[key], b[key])) {
             return false;
         }
@@ -121,8 +127,10 @@ function is(a, b) {
         checkedKeys[key] = true;
     }
 
-    for (let key in b) {
-        if (!checkedKeys[key]) return false;
+    for (const key in b) {
+        if (!checkedKeys[key]) {
+            return false;
+        }
     }
 
     return true;

@@ -1,6 +1,7 @@
 const {expect} = require('chai');
 const {spy} = require('sinon');
 const React = require('react/addons');
+const {merge} = require('../src/operators');
 const {ImmutableState, ImmutableStateRoot} = require('../src/immutable-component')({React});
 const {
     createClass,
@@ -23,7 +24,7 @@ function mock(config) {
         }
     });
 
-    const StatefulComponent = ImmutableState(MockComponent, Object.assign({
+    const StatefulComponent = ImmutableState(MockComponent, merge({
         getPath: just('mockComponent'),
         getDefaultState: just({mockValue: 1}),
         handleMouseDown() {
